@@ -1,0 +1,11 @@
+{
+  "name": "行人天堂 Pedestrian Paradise",
+  "short_name": "行人天堂",
+  "description": "專為行人打造的人本交通客製化步行導航與城市體驗",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f5f0",
+  "theme_color": "#0f766e",
+  "lang": "zh-Hant-TW",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

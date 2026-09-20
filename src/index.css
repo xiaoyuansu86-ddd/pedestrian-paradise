@@ -1,0 +1,83 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-paradise-50: #f0fdfa;
+  --color-paradise-100: #ccfbf1;
+  --color-paradise-500: #14b8a6;
+  --color-paradise-600: #0d9488;
+  --color-paradise-700: #0f766e;
+  --color-paradise-800: #115e59;
+  --color-sand-50: #f7f5f0;
+  --color-sand-100: #efeae0;
+  --color-sand-200: #e2dccd;
+  --color-sand-700: #6b6357;
+  --color-sand-900: #2b2823;
+  --color-delight-500: #f4735e;
+  --color-delight-600: #e2573f;
+  --font-sans: 'Noto Sans TC', 'PingFang TC', 'Helvetica Neue', system-ui, -apple-system, sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overscroll-behavior: none;
+}
+body {
+  background: var(--color-sand-50);
+  color: var(--color-sand-900);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+.safe-b {
+  padding-bottom: max(env(safe-area-inset-bottom), 12px);
+}
+.safe-t {
+  padding-top: max(env(safe-area-inset-top), 12px);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.maplibregl-ctrl-attrib {
+  font-size: 10px;
+  opacity: 0.7;
+}
+.maplibregl-ctrl-bottom-right {
+  bottom: 300px !important;
+}
+
+@keyframes pp-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35); }
+  70% { box-shadow: 0 0 0 14px rgba(37, 99, 235, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+.pp-pulse {
+  animation: pp-pulse 2s infinite;
+}
+
+.card {
+  @apply bg-white/95 backdrop-blur rounded-2xl shadow-[0_8px_30px_rgba(43,40,35,0.10)] border border-sand-200;
+}
+.chip {
+  @apply inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium border transition-colors select-none whitespace-nowrap;
+}
+.chip-on {
+  @apply bg-paradise-700 text-white border-paradise-700;
+}
+.chip-off {
+  @apply bg-white text-sand-900 border-sand-200 active:bg-sand-100;
+}
+.btn-primary {
+  @apply w-full rounded-2xl bg-paradise-700 text-white font-semibold py-3.5 text-base active:bg-paradise-800 disabled:opacity-40 transition-colors;
+}
+.btn-ghost {
+  @apply rounded-xl px-3 py-2 text-sm font-medium text-sand-700 bg-sand-100 active:bg-sand-200;
+}
