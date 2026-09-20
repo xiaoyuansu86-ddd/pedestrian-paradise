@@ -13,22 +13,25 @@ export interface DataStatus {
   map: 'google' | 'osm'
 }
 
-/** 路網：先試 Cloudflare Function 代發 Overpass（邊緣快取 1h），失敗退回示範路網 */
-export async function loadNetwork(center: LatLng, radius = DEMO_RADIUS_M): Promise<{ data: OsmData; live: boolean }> {
-  try {
-    const url = `/api/overpass?lat=${center.lat.toFixed(5)}&lng=${center.lng.toFixed(5)}&r=${radius}`
-    const res = await fetch(url, { signal: AbortSignal.timeout(25000) })
-    if (res.ok) {
-      const data = (await res.json()) as OsmData
-      if (data.ways?.length > 50) return { data, live: true }
-    }
-  } catch {
-    /* fall through */
-  }
+/** 示範路網（隨站台部署，秒開） */
+export async function loadDemoNetwork(): Promise<OsmData> {
   const res = await fetch('/data/osm_taoyuan_station.json')
   const data = (await res.json()) as OsmData
   data.meta.demo = true
-  return { data, live: false }
+  return data
+}
+
+/** 即時路網：Cloudflare Function 代發 Overpass（邊緣快取 1h）；失敗回 null，維持示範路網 */
+export async function loadLiveNetwork(center: LatLng, radius = DEMO_RADIUS_M): Promise<OsmData | null> {
+  try {
+    const url = `/api/overpass?lat=${center.lat.toFixed(5)}&lng=${center.lng.toFixed(5)}&r=${radius}`
+    const res = await fetch(url, { signal: AbortSignal.timeout(60000) })
+    if (!res.ok) return null
+    const data = (await res.json()) as OsmData
+    return data.ways?.length > 50 ? data : null
+  } catch {
+    return null
+  }
 }
 
 export async function loadSidewalks(): Promise<SidewalkCollection | null> {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Graph, LatLng, LngLat, NeedProfile, Poi, Report, ReportType, RouteOption, Trip, ViewMode } from './types'
+import type { Graph, LatLng, LngLat, NeedProfile, OsmData, Poi, Report, ReportType, RouteOption, Trip, ViewMode } from './types'
 import { MapView } from './components/MapView'
 import { TopBar } from './components/TopBar'
 import { SearchPanel } from './components/SearchPanel'
@@ -10,7 +10,7 @@ import { TripSummary } from './components/TripSummary'
 import { SurpriseWheel } from './components/SurpriseWheel'
 import { ReportModal } from './components/ReportModal'
 import type { MarkerSpec, RouteLayer } from './map/MapAdapter'
-import { TAOYUAN_STATION, loadNetwork, loadSidewalks, type DataStatus } from './lib/data'
+import { TAOYUAN_STATION, loadDemoNetwork, loadLiveNetwork, loadSidewalks, type DataStatus } from './lib/data'
 import { buildGraph, type SidewalkCollection } from './lib/network'
 import { planRoutes } from './lib/router'
 import { sunPosition } from './lib/sun'
@@ -46,7 +46,7 @@ export default function App() {
   const [graph, setGraph] = useState<Graph | null>(null)
   const [reports, setReports] = useState<Report[]>([])
   const [status, setStatus] = useState<DataStatus>({ network: 'loading', sidewalk: false, places: 'osm', reports: 'local', ai: 'server', map: 'osm' })
-  const osmRef = useRef<Awaited<ReturnType<typeof loadNetwork>>['data'] | null>(null)
+  const osmRef = useRef<OsmData | null>(null)
 
   const [motion, setMotion] = useState<MotionStats | null>(null)
   const sensor = useRef<MotionSensor | null>(null)
@@ -57,13 +57,20 @@ export default function App() {
   // ---- 資料載入 ----
   useEffect(() => {
     ;(async () => {
-      const [net, sw, shared] = await Promise.all([loadNetwork(TAOYUAN_STATION), loadSidewalks(), fetchSharedReports()])
-      osmRef.current = net.data
-      setOsmPois(net.data.pois)
+      const [net, sw, shared] = await Promise.all([loadDemoNetwork(), loadSidewalks(), fetchSharedReports()])
+      osmRef.current = net
+      setOsmPois(net.pois)
       setSidewalks(sw)
       const all = mergeReports(loadLocalReports(), shared.reports)
       setReports(all)
-      setStatus((s) => ({ ...s, network: net.live ? 'live' : 'demo', sidewalk: !!sw, reports: shared.shared ? 'shared' : 'local' }))
+      setStatus((s) => ({ ...s, network: 'demo', sidewalk: !!sw, reports: shared.shared ? 'shared' : 'local' }))
+      // 背景升級成即時路網（成功才替換）
+      loadLiveNetwork(TAOYUAN_STATION).then((live) => {
+        if (!live) return
+        osmRef.current = live
+        setOsmPois(live.pois)
+        setStatus((s) => ({ ...s, network: 'live' }))
+      })
       // 探測 Places 是否可用
       fetch('/api/places?q=cafe&lat=24.989&lng=121.314', { signal: AbortSignal.timeout(6000) })
         .then((r) => setStatus((s) => ({ ...s, places: r.ok ? 'google' : 'osm' })))

@@ -4,7 +4,7 @@
  */
 interface Env {}
 
-const MIRRORS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter']
+const MIRRORS = ['https://overpass.kumi.systems/api/interpreter', 'https://overpass-api.de/api/interpreter']
 
 const KEEP = new Set([
   'highway', 'name', 'name:en', 'sidewalk', 'sidewalk:left', 'sidewalk:right', 'sidewalk:both', 'footway', 'width', 'surface', 'lit', 'covered',
@@ -14,7 +14,7 @@ const KEEP = new Set([
 
 function query(lat: number, lng: number, r: number) {
   const around = `(around:${r},${lat},${lng})`
-  return `[out:json][timeout:60];
+  return `[out:json][timeout:25];
 (
   way["highway"]["highway"!~"motorway|motorway_link|trunk|trunk_link|construction|proposed|raceway|bus_guideway"]${around};
   node["name"]["amenity"~"cafe|restaurant|library|place_of_worship|marketplace|drinking_water|toilets|bubble_tea|ice_cream|fast_food|theatre|arts_centre|community_centre"]${around};
@@ -86,7 +86,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request }) => {
         method: 'POST',
         headers: { 'content-type': 'application/x-www-form-urlencoded', 'user-agent': 'pedestrian-paradise/0.1 (cloudflare pages function)' },
         body: 'data=' + encodeURIComponent(q),
-        signal: AbortSignal.timeout(45000),
+        signal: AbortSignal.timeout(28000),
       })
       if (!res.ok) {
         lastErr = `${m} ${res.status}`
