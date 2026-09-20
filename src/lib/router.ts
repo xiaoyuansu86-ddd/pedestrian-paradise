@@ -13,8 +13,8 @@ export interface RouteContext {
 
 /** 三種嚴格度的路線側寫 */
 const PROFILES: { id: RouteOption['id']; label: string; tagline: string; color: string; strict: number }[] = [
-  { id: 'A', label: '最貼近需求', tagline: '把你的每一項需求放在第一位', color: '#0f766e', strict: 1.0 },
-  { id: 'B', label: '平衡路線', tagline: '兼顧需求與距離', color: '#d97706', strict: 0.4 },
+  { id: 'A', label: '最貼近需求', tagline: '把你的每一項需求放在第一位', color: '#c4f3c4', strict: 1.0 },
+  { id: 'B', label: '平衡路線', tagline: '兼顧需求與距離', color: '#5c3a1e', strict: 0.4 },
   { id: 'C', label: '最快抵達', tagline: '距離優先，基本安全仍保留', color: '#475569', strict: 0.12 },
 ]
 

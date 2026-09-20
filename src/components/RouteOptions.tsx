@@ -81,7 +81,7 @@ export function RouteOptions({ routes, selected, onSelect, onBack, onStart, load
         })}
       </div>
 
-      <button className="btn-primary flex items-center justify-center gap-2" disabled={!selected || loading} onClick={onStart}>
+      <button className="btn-mint flex items-center justify-center gap-2" disabled={!selected || loading} onClick={onStart}>
         <Navigation size={18} /> 開始步行
       </button>
     </div>

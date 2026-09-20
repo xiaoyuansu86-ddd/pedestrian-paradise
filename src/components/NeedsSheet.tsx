@@ -78,6 +78,24 @@ export function NeedsSheet({ profile, onChange, onBack, onPlan, aiAvailable, onA
         <h2 className="font-semibold text-lg">這趟路，你需要什麼？</h2>
       </div>
 
+      <form
+        className="flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault()
+          submit(text)
+        }}
+      >
+        <input
+          className="flex-1 rounded-xl bg-sand-100 px-3 py-2.5 text-base outline-none focus:ring-2 ring-paradise-500"
+          placeholder="例如：剛做完眼睛雷射不能逆光"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
+        <button type="submit" className="rounded-xl bg-paradise-700 text-white px-3 disabled:opacity-40" disabled={!text.trim() || thinking} aria-label="送出">
+          <Send size={18} />
+        </button>
+      </form>
+
       <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1">
         {PRESETS.map((p) => (
           <button key={p.id} className={`chip ${activePresets.has(p.id) ? 'chip-on' : 'chip-off'}`} onClick={() => togglePreset(p.id)} title={p.hint}>
@@ -111,24 +129,6 @@ export function NeedsSheet({ profile, onChange, onBack, onPlan, aiAvailable, onA
         {thinking && <div className="self-start text-sm text-sand-700 px-3 py-2">思考中…</div>}
       </div>
 
-      <form
-        className="flex gap-2"
-        onSubmit={(e) => {
-          e.preventDefault()
-          submit(text)
-        }}
-      >
-        <input
-          className="flex-1 rounded-xl bg-sand-100 px-3 py-2.5 text-base outline-none focus:ring-2 ring-paradise-500"
-          placeholder="例如：剛做完眼睛雷射不能逆光"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
-        <button type="submit" className="rounded-xl bg-paradise-700 text-white px-3 disabled:opacity-40" disabled={!text.trim() || thinking} aria-label="送出">
-          <Send size={18} />
-        </button>
-      </form>
-
       {(profile.needs.length > 0 || profile.detours.length > 0) && (
         <div className="flex flex-wrap gap-1.5 text-xs">
           {profile.needs.map((n) => (
@@ -144,7 +144,7 @@ export function NeedsSheet({ profile, onChange, onBack, onPlan, aiAvailable, onA
         </div>
       )}
 
-      <button className="btn-primary" onClick={onPlan}>
+      <button className="btn-mint" onClick={onPlan}>
         幫我規劃路線
       </button>
     </div>

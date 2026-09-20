@@ -125,8 +125,8 @@ export function SearchPanel({ origin, originLabel, pois, destination, onPickDest
       )}
 
       <div className="flex gap-2">
-        <button className="btn-primary flex-1" disabled={!destination} onClick={onNext}>
-          下一步：告訴我你的需求
+        <button className="btn-mint flex-1" disabled={!destination} onClick={onNext}>
+          分享你的需求
         </button>
         <button className="rounded-2xl px-4 bg-delight-500 text-white font-semibold active:bg-delight-600 flex items-center gap-1" onClick={onSurprise} aria-label="驚喜轉盤">
           <Sparkles size={18} />
