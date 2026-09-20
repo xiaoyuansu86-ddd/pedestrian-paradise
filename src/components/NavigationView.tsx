@@ -1,9 +1,11 @@
-import { AlertTriangle, Flag, Activity } from 'lucide-react'
-import type { Poi, RouteOption } from '../types'
+import { useEffect, useRef, useState } from 'react'
+import { Flag, Activity } from 'lucide-react'
+import type { Poi, ReportType, RouteOption } from '../types'
 import type { MotionStats } from '../lib/motion'
 import { fmtDistance, fmtMinutes } from '../lib/geo'
 import { DETOUR_EMOJI, type RouteSpot } from '../lib/pois'
 import { DETOUR_LABEL } from '../lib/needs'
+import { REPORT_TYPES } from '../lib/reports'
 
 interface Props {
   route: RouteOption
@@ -14,14 +16,33 @@ interface Props {
   /** 沿線符合需求的地點（已標在地圖上） */
   spots: RouteSpot[]
   onFocusSpot: (p: Poi) => void
-  onReport: () => void
+  /** 一鍵回報目前所在位置的路況；回傳是否已同步到雲端 */
+  onQuickReport: (type: ReportType) => Promise<boolean>
   onFinish: () => void
 }
 
-export function NavigationView({ route, destinationName, progress, motion, simulated, spots, onFocusSpot, onReport, onFinish }: Props) {
+export function NavigationView({ route, destinationName, progress, motion, simulated, spots, onFocusSpot, onQuickReport, onFinish }: Props) {
   const remaining = route.distance * (1 - progress)
   const remainMin = route.minutes * (1 - progress)
   const roughLabel = motion ? ['平整', '普通', '顛簸'][motion.roughness] : null
+
+  const [sending, setSending] = useState<ReportType | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef<number | null>(null)
+  useEffect(() => () => {
+    if (toastTimer.current) window.clearTimeout(toastTimer.current)
+  }, [])
+
+  const quickReport = async (type: ReportType) => {
+    if (sending) return
+    const meta = REPORT_TYPES.find((r) => r.type === type)!
+    setSending(type)
+    const ok = await onQuickReport(type)
+    setSending(null)
+    setToast(`${meta.emoji} 已回報「${meta.label}」${ok ? '，已同步共享' : '（暫存本機）'}`)
+    if (toastTimer.current) window.clearTimeout(toastTimer.current)
+    toastTimer.current = window.setTimeout(() => setToast(null), 2500)
+  }
   return (
     <div className="card p-4 flex flex-col gap-3">
       <div className="flex items-center gap-3">
@@ -66,14 +87,31 @@ export function NavigationView({ route, destinationName, progress, motion, simul
         {simulated && <span className="bg-amber-100 text-amber-800 rounded px-1.5 py-0.5">模擬行走</span>}
       </div>
 
-      <div className="flex gap-2">
-        <button className="flex-1 rounded-2xl bg-amber-500 text-white font-semibold py-3 flex items-center justify-center gap-2 active:bg-amber-600" onClick={onReport}>
-          <AlertTriangle size={18} /> 回報路況
-        </button>
-        <button className="flex-1 rounded-2xl bg-paradise-700 text-white font-semibold py-3 flex items-center justify-center gap-2 active:bg-paradise-800" onClick={onFinish}>
-          <Flag size={18} /> {progress >= 0.98 ? '抵達，結束旅程' : '結束旅程'}
-        </button>
+      {/* 即時路況回報：一鍵送出目前位置，不開視窗、不遮地圖 */}
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center justify-between text-xs text-sand-700">
+          <span>這裡的路況（點一下立即回報）</span>
+          {toast && <span className="text-paradise-700 font-medium truncate ml-2">{toast}</span>}
+        </div>
+        <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1">
+          {REPORT_TYPES.map((r) => (
+            <button
+              key={r.type}
+              className={`chip shrink-0 !py-1.5 ${r.type === 'good' ? 'bg-paradise-50 border-paradise-500 text-paradise-800' : 'bg-amber-50 border-amber-400 text-amber-900'} ${sending === r.type ? 'opacity-50' : 'active:scale-95'}`}
+              disabled={!!sending}
+              onClick={() => quickReport(r.type)}
+              title={r.desc}
+            >
+              <span>{r.emoji}</span>
+              {r.label}
+            </button>
+          ))}
+        </div>
       </div>
+
+      <button className="rounded-2xl bg-paradise-700 text-white font-semibold py-3 flex items-center justify-center gap-2 active:bg-paradise-800" onClick={onFinish}>
+        <Flag size={18} /> {progress >= 0.98 ? '抵達，結束旅程' : '結束旅程'}
+      </button>
     </div>
   )
 }

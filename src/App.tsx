@@ -246,10 +246,9 @@ export default function App() {
   }, [origin, destination, userPos, step, routes, selected, trip, reports, spots])
 
   const onMapClick = (p: LatLng) => {
+    // 導航中點地圖只做瀏覽，不再彈出回報視窗（回報改由導航面板一鍵送出）
     if (step === 'input') {
       setDestination({ pos: p, name: `地圖上的點 (${p.lat.toFixed(4)}, ${p.lng.toFixed(4)})` })
-    } else if (step === 'navigate') {
-      setReportAt(p)
     }
   }
 
@@ -332,7 +331,7 @@ export default function App() {
             simulated={simulated.current}
             spots={spots}
             onFocusSpot={(p) => setFit({ coords: [[p.lng, p.lat]], key: `spot-${p.id}-${Date.now()}` })}
-            onReport={() => setReportAt(userPos ?? origin)}
+            onQuickReport={(t) => addReport(userPos ?? origin, t, '')}
             onFinish={finishTrip}
           />
         )}
