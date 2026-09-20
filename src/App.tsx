@@ -14,7 +14,8 @@ import { TAOYUAN_STATION, loadDemoNetwork, loadLiveNetwork, loadSidewalks, type 
 import { buildGraph, type SidewalkCollection } from './lib/network'
 import { planRoutes } from './lib/router'
 import { sunPosition } from './lib/sun'
-import { highlightsAlong, mergePois, pickSurprise, type SurpriseTheme } from './lib/pois'
+import { DETOUR_EMOJI, highlightsAlong, mergePois, pickSurprise, spotsAlong, type SurpriseTheme } from './lib/pois'
+import { DETOUR_LABEL } from './lib/needs'
 import { fetchSharedReports, loadLocalReports, mergeReports, newId, submitReport } from './lib/reports'
 import { MotionSensor, type MotionStats } from './lib/motion'
 import { haversine, lineLength } from './lib/geo'
@@ -40,6 +41,7 @@ export default function App() {
   const [surpriseOpen, setSurpriseOpen] = useState(false)
   const [reportAt, setReportAt] = useState<LatLng | null>(null)
   const [fit, setFit] = useState<{ coords: LngLat[]; key: string }>({ coords: [], key: '' })
+  const [mapError, setMapError] = useState<string | null>(null)
 
   const [osmPois, setOsmPois] = useState<Poi[]>([])
   const [sidewalks, setSidewalks] = useState<SidewalkCollection | null>(null)
@@ -215,16 +217,33 @@ export default function App() {
     return []
   }, [step, routes, selected, trip])
 
+  /** 導航中：沿線符合使用者需求的地點（繞經店家 + 同類型鄰近店家） */
+  const spots = useMemo(() => (step === 'navigate' && trip ? spotsAlong(trip.route.coords, pois, trip.profile.detours, trip.route.via) : []), [step, trip, pois])
+
   const markers: MarkerSpec[] = useMemo(() => {
     const m: MarkerSpec[] = [{ id: 'origin', pos: origin, kind: 'origin', label: '起點' }]
     if (destination) m.push({ id: 'dest', pos: destination.pos, kind: 'dest', label: destination.name })
     if (userPos && (step === 'navigate' || !simulated.current)) m.push({ id: 'user', pos: userPos, kind: 'user' })
-    const r = step === 'routes' ? routes.find((x) => x.id === selected) : trip?.route
-    r?.via.forEach((p) => m.push({ id: `via-${p.id}`, pos: p, kind: 'via', label: p.name }))
+    if (step === 'navigate') {
+      spots.forEach((s) =>
+        m.push({
+          id: `spot-${s.poi.id}`,
+          pos: s.poi,
+          kind: 'via',
+          label: s.poi.name,
+          emoji: DETOUR_EMOJI[s.kind],
+          caption: s.poi.name,
+          sub: s.d === 0 ? `${DETOUR_LABEL[s.kind]} · 順路繞經` : `${DETOUR_LABEL[s.kind]} · 離路線 ${Math.round(s.d)} m`,
+        }),
+      )
+    } else {
+      const r = step === 'routes' ? routes.find((x) => x.id === selected) : trip?.route
+      r?.via.forEach((p) => m.push({ id: `via-${p.id}`, pos: p, kind: 'via', label: p.name }))
+    }
     if (step === 'summary' && trip) trip.highlights.forEach((p, i) => m.push({ id: `hl-${p.id}`, pos: p, kind: 'poi', label: p.name, emoji: String(i + 1) }))
     for (const rp of reports) if (rp.type !== 'good') m.push({ id: `rep-${rp.id}`, pos: rp, kind: 'report', label: rp.type })
     return m
-  }, [origin, destination, userPos, step, routes, selected, trip, reports])
+  }, [origin, destination, userPos, step, routes, selected, trip, reports, spots])
 
   const onMapClick = (p: LatLng) => {
     if (step === 'input') {
@@ -257,7 +276,15 @@ export default function App() {
         fitKey={fit.key}
         onClick={onMapClick}
         onReady={(kind) => setStatus((s) => ({ ...s, map: kind }))}
+        onMapError={setMapError}
       />
+
+      {mapError && (
+        <div className="absolute top-36 left-3 right-3 z-30 card px-3 py-2 text-xs text-amber-800 bg-amber-50 flex items-start gap-2">
+          <span className="flex-1">{mapError}</span>
+          <button onClick={() => setMapError(null)} aria-label="關閉" className="font-bold">×</button>
+        </div>
+      )}
 
       <TopBar viewMode={viewMode} onViewMode={setViewMode} showSidewalks={showSidewalks} onToggleSidewalks={() => setShowSidewalks((v) => !v)} status={status} />
 
@@ -297,7 +324,17 @@ export default function App() {
           />
         )}
         {step === 'navigate' && trip && (
-          <NavigationView route={trip.route} destinationName={trip.destinationName} progress={progress} motion={motion} simulated={simulated.current} onReport={() => setReportAt(userPos ?? origin)} onFinish={finishTrip} />
+          <NavigationView
+            route={trip.route}
+            destinationName={trip.destinationName}
+            progress={progress}
+            motion={motion}
+            simulated={simulated.current}
+            spots={spots}
+            onFocusSpot={(p) => setFit({ coords: [[p.lng, p.lat]], key: `spot-${p.id}-${Date.now()}` })}
+            onReport={() => setReportAt(userPos ?? origin)}
+            onFinish={finishTrip}
+          />
         )}
         {step === 'summary' && trip && (
           <TripSummary

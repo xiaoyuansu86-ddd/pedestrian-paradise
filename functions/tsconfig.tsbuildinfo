@@ -1,1 +1,1 @@
-{"root":["./api/overpass.ts","./api/parse.ts","./api/places.ts","./api/reports.ts"],"version":"6.0.3"}
+{"root":["./api/health.ts","./api/overpass.ts","./api/parse.ts","./api/places.ts","./api/reports.ts"],"version":"6.0.3"}

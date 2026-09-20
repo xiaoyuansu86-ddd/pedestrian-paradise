@@ -1,7 +1,7 @@
 import { setOptions, importLibrary } from '@googlemaps/js-api-loader'
 import type { LatLng, LngLat, ViewMode } from '../types'
 import type { MapAdapter, MarkerSpec, RouteLayer } from './MapAdapter'
-import { PALETTE } from './MapAdapter'
+import { PALETTE, buildMarkerElement } from './MapAdapter'
 
 /** Google Maps 客製調色，內容同專案根目錄 map color-new.txt（僅 raster 地圖／無 Map ID 時生效；有 Map ID 請在雲端樣式設定） */
 const STYLES: google.maps.MapTypeStyle[] = [
@@ -134,16 +134,14 @@ export class GoogleMapAdapter implements MapAdapter {
       }
       const st = MARKER_STYLE[spec.kind]
       if (this.hasAdvanced) {
-        const el = document.createElement('div')
-        el.style.cssText = `width:${st.size}px;height:${st.size}px;border-radius:50%;background:${spec.color ?? st.bg};border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:${st.size * 0.55}px;line-height:1;`
-        el.textContent = spec.emoji ?? st.emoji
+        const el = buildMarkerElement(spec, st)
         const m = new google.maps.marker.AdvancedMarkerElement({ map, position: spec.pos, content: el, title: spec.label })
         this.markers.set(spec.id, m)
       } else {
         const m = new google.maps.Marker({
           map,
           position: spec.pos,
-          title: spec.label,
+          title: spec.caption ? `${spec.caption}${spec.sub ? ` — ${spec.sub}` : ''}` : spec.label,
           icon: {
             path: google.maps.SymbolPath.CIRCLE,
             scale: st.size / 2.4,

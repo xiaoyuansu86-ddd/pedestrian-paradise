@@ -14,9 +14,16 @@ interface Props {
   fitKey: string
   onClick: (p: LatLng) => void
   onReady: (kind: 'google' | 'osm') => void
+  onMapError?: (msg: string) => void
 }
 
-export function MapView({ center, routes, markers, sidewalks, showSidewalks, viewMode, fitTo, fitKey, onClick, onReady }: Props) {
+declare global {
+  interface Window {
+    gm_authFailure?: () => void
+  }
+}
+
+export function MapView({ center, routes, markers, sidewalks, showSidewalks, viewMode, fitTo, fitKey, onClick, onReady, onMapError }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const adapter = useRef<MapAdapter | null>(null)
   const ready = useRef(false)
@@ -25,21 +32,43 @@ export function MapView({ center, routes, markers, sidewalks, showSidewalks, vie
 
   useEffect(() => {
     let cancelled = false
-    ;(async () => {
-      const a = await createAdapter()
-      if (cancelled || !ref.current) return
-      await a.mount(ref.current, center, 15.5)
+    const el = ref.current
+    const mountAdapter = async (a: MapAdapter) => {
+      if (cancelled || !el) return
+      el.innerHTML = ''
+      await a.mount(el, center, 15.5)
       if (cancelled) {
         a.destroy()
         return
       }
       a.onClick((p) => clickRef.current(p))
+      a.setRoutes(routes)
+      a.setMarkers(markers)
+      a.setSidewalks(showSidewalks ? sidewalks : null)
       adapter.current = a
       ready.current = true
       onReady(a.kind)
+    }
+    // Google 金鑰驗證失敗（referrer / API 未啟用 / 帳單）→ 無縫退回 OSM 底圖
+    window.gm_authFailure = async () => {
+      onMapError?.('Google 底圖金鑰驗證失敗（請檢查 Maps JavaScript API 是否啟用、referrer 限制、帳單），已切換 OSM 底圖')
+      adapter.current?.destroy()
+      adapter.current = null
+      const { MapLibreAdapter } = await import('../map/MapLibreAdapter')
+      await mountAdapter(new MapLibreAdapter())
+    }
+    ;(async () => {
+      try {
+        await mountAdapter(await createAdapter())
+      } catch (e) {
+        onMapError?.(`底圖載入失敗：${(e as Error).message}，改用 OSM 底圖`)
+        const { MapLibreAdapter } = await import('../map/MapLibreAdapter')
+        await mountAdapter(new MapLibreAdapter())
+      }
     })()
     return () => {
       cancelled = true
+      window.gm_authFailure = undefined
       adapter.current?.destroy()
       adapter.current = null
       ready.current = false

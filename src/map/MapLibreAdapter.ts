@@ -2,7 +2,7 @@ import { Map as MLMap, Marker, LngLatBounds, type StyleSpecification, type GeoJS
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { LatLng, LngLat, ViewMode } from '../types'
 import type { MapAdapter, MarkerSpec, RouteLayer } from './MapAdapter'
-import { PALETTE } from './MapAdapter'
+import { PALETTE, buildMarkerElement } from './MapAdapter'
 
 const STYLE_URL = 'https://tiles.openfreemap.org/styles/bright'
 
@@ -209,13 +209,7 @@ export class MapLibreAdapter implements MapAdapter {
     for (const spec of markers) {
       let m = this.markers.get(spec.id)
       if (!m) {
-        const el = document.createElement('div')
-        const st = MARKER_STYLE[spec.kind]
-        el.className = 'pp-marker'
-        el.style.cssText = `width:${st.size}px;height:${st.size}px;border-radius:50%;background:${spec.color ?? st.bg};border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:${st.size * 0.55}px;line-height:1;cursor:pointer;`
-        if (spec.kind === 'user') el.style.cssText += 'box-shadow:0 0 0 8px rgba(37,99,235,.2);'
-        el.textContent = spec.emoji ?? (spec.kind === 'origin' || spec.kind === 'user' ? '' : st.emoji)
-        if (spec.label) el.title = spec.label
+        const el = buildMarkerElement(spec, MARKER_STYLE[spec.kind])
         m = new Marker({ element: el, anchor: 'center' }).setLngLat([spec.pos.lng, spec.pos.lat]).addTo(map)
         this.markers.set(spec.id, m)
       } else m.setLngLat([spec.pos.lng, spec.pos.lat])

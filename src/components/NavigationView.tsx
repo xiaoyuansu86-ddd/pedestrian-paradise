@@ -1,7 +1,9 @@
 import { AlertTriangle, Flag, Activity } from 'lucide-react'
-import type { RouteOption } from '../types'
+import type { Poi, RouteOption } from '../types'
 import type { MotionStats } from '../lib/motion'
 import { fmtDistance, fmtMinutes } from '../lib/geo'
+import { DETOUR_EMOJI, type RouteSpot } from '../lib/pois'
+import { DETOUR_LABEL } from '../lib/needs'
 
 interface Props {
   route: RouteOption
@@ -9,11 +11,14 @@ interface Props {
   progress: number // 0..1
   motion: MotionStats | null
   simulated: boolean
+  /** 沿線符合需求的地點（已標在地圖上） */
+  spots: RouteSpot[]
+  onFocusSpot: (p: Poi) => void
   onReport: () => void
   onFinish: () => void
 }
 
-export function NavigationView({ route, destinationName, progress, motion, simulated, onReport, onFinish }: Props) {
+export function NavigationView({ route, destinationName, progress, motion, simulated, spots, onFocusSpot, onReport, onFinish }: Props) {
   const remaining = route.distance * (1 - progress)
   const remainMin = route.minutes * (1 - progress)
   const roughLabel = motion ? ['平整', '普通', '顛簸'][motion.roughness] : null
@@ -36,6 +41,22 @@ export function NavigationView({ route, destinationName, progress, motion, simul
       <div className="h-2 rounded-full bg-sand-100 overflow-hidden">
         <div className="h-full rounded-full transition-all" style={{ width: `${Math.round(progress * 100)}%`, background: route.color }} />
       </div>
+
+      {spots.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <div className="text-xs text-sand-700">沿路符合你需求的地點（點擊定位）</div>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1">
+            {spots.map((s) => (
+              <button key={s.poi.id} className="chip chip-off !py-1 shrink-0 flex-col !items-start !gap-0 !rounded-xl" onClick={() => onFocusSpot(s.poi)}>
+                <span className="text-sm">
+                  {DETOUR_EMOJI[s.kind]} {s.poi.name}
+                </span>
+                <span className="text-[10px] text-sand-700 font-normal">{s.d === 0 ? `${DETOUR_LABEL[s.kind]} · 順路繞經` : `${DETOUR_LABEL[s.kind]} · 離路線 ${Math.round(s.d)} m`}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-between text-xs text-sand-700">
         <span className="flex items-center gap-1">

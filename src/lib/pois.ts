@@ -29,6 +29,54 @@ export function poisForDetour(pois: Poi[], kind: DetourKind): Poi[] {
   })
 }
 
+export const DETOUR_EMOJI: Record<DetourKind, string> = {
+  drink: '🧋',
+  coffee: '☕',
+  book: '📚',
+  bakery: '🥐',
+  convenience: '🏪',
+  temple: '🏮',
+  park: '🌳',
+  toilet: '🚻',
+  dessert: '🍧',
+  food: '🍜',
+}
+
+export interface RouteSpot {
+  poi: Poi
+  kind: DetourKind
+  /** 距路線公尺 */
+  d: number
+}
+
+/**
+ * 導航時要標在地圖上的「符合需求地點」：
+ * 路線實際繞經的店家（via）一定列入，再補上沿線 maxDist 內、符合使用者所選類型的其他店家。
+ */
+export function spotsAlong(route: LngLat[], pois: Poi[], detours: DetourKind[], via: Poi[], maxDist = 80, limit = 10): RouteSpot[] {
+  const out: RouteSpot[] = []
+  const seen = new Set<string>()
+  const kindOf = (p: Poi): DetourKind | null => detours.find((k) => poisForDetour([p], k).length > 0) ?? null
+  for (const p of via) {
+    const kind = kindOf(p) ?? detours[0]
+    if (!kind) continue
+    seen.add(p.id)
+    out.push({ poi: p, kind, d: 0 })
+  }
+  const extra: RouteSpot[] = []
+  for (const kind of detours) {
+    for (const p of poisForDetour(pois, kind)) {
+      if (seen.has(p.id) || !p.name) continue
+      const d = pointToLineM([p.lng, p.lat], route)
+      if (d > maxDist) continue
+      seen.add(p.id)
+      extra.push({ poi: p, kind, d })
+    }
+  }
+  extra.sort((a, b) => a.d - b.d)
+  return [...out, ...extra].slice(0, limit)
+}
+
 /** 文化亮點優先序（越前越優先） */
 const HIGHLIGHT_PRIORITY: Record<string, number> = {
   museum: 10,
