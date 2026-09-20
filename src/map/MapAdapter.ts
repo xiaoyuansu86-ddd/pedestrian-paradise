@@ -31,13 +31,14 @@ export interface MapAdapter {
   onClick(cb: (p: LatLng) => void): void
 }
 
+/** 依 map color-new.txt：全圖單一淺藍灰底，巷道近白且加粗，建物／POI／高速公路隱藏 */
 export const PALETTE = {
-  bg: '#f7f5f0',
-  water: '#cfe6e3',
-  park: '#d9ead3',
-  road: '#ffffff',
-  roadMajor: '#f3e8d2',
-  building: '#ece7dd',
+  bg: '#dbeaeb',
+  water: '#dbeaeb',
+  park: '#dbeaeb',
+  road: '#f4fafa',
+  roadMajor: '#cddfe0',
+  building: '#dbeaeb',
   label: '#5b5b5b',
   sidewalk: '#0f766e',
 }

@@ -3,19 +3,14 @@ import type { LatLng, LngLat, ViewMode } from '../types'
 import type { MapAdapter, MarkerSpec, RouteLayer } from './MapAdapter'
 import { PALETTE } from './MapAdapter'
 
-/** Google Maps 客製調色（僅 raster 地圖／無 Map ID 時生效；有 Map ID 請在雲端樣式設定） */
+/** Google Maps 客製調色，內容同專案根目錄 map color-new.txt（僅 raster 地圖／無 Map ID 時生效；有 Map ID 請在雲端樣式設定） */
 const STYLES: google.maps.MapTypeStyle[] = [
-  { elementType: 'geometry', stylers: [{ color: PALETTE.bg }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: PALETTE.label }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
-  { featureType: 'water', stylers: [{ color: PALETTE.water }] },
-  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: PALETTE.park }] },
-  { featureType: 'landscape.man_made', elementType: 'geometry', stylers: [{ color: PALETTE.building }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: PALETTE.road }] },
-  { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: PALETTE.roadMajor }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#f0dcb8' }] },
-  { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
-  { featureType: 'transit.line', stylers: [{ color: '#b8c4c2' }] },
+  { elementType: 'geometry.fill', stylers: [{ color: PALETTE.bg }] },
+  { featureType: 'landscape.man_made', stylers: [{ visibility: 'off' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road.highway.controlled_access', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road.highway.controlled_access', elementType: 'geometry.stroke', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road.local', elementType: 'geometry.fill', stylers: [{ saturation: 85 }, { lightness: 95 }, { weight: 8 }] },
 ]
 
 const MARKER_STYLE: Record<MarkerSpec['kind'], { bg: string; size: number; emoji: string }> = {

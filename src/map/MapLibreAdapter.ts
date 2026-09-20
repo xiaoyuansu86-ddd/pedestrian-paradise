@@ -49,7 +49,7 @@ export class MapLibreAdapter implements MapAdapter {
     })
   }
 
-  /** 客製化色彩：柔和米白底、暖色主要道路、青綠人行道 */
+  /** 客製化色彩（對應 map color-new.txt 的 Google 樣式）：單一淺藍灰底、巷道近白加粗、建物／POI／高速公路隱藏 */
   private recolor() {
     const map = this.map!
     const style = map.getStyle() as StyleSpecification
@@ -61,16 +61,22 @@ export class MapLibreAdapter implements MapAdapter {
         else if ((id.includes('park') || id.includes('landuse') || id.includes('grass') || id.includes('wood')) && layer.type === 'fill')
           map.setPaintProperty(id, 'fill-color', PALETTE.park)
         else if (id.includes('building') && layer.type === 'fill') {
-          map.setPaintProperty(id, 'fill-color', PALETTE.building)
-          map.setPaintProperty(id, 'fill-opacity', 0.9)
+          map.setLayoutProperty(id, 'visibility', 'none')
         } else if (id.startsWith('road') || id.startsWith('highway') || id.includes('street') || id.includes('bridge') || id.includes('tunnel')) {
           if (layer.type === 'line') {
-            if (id.includes('motorway') || id.includes('trunk') || id.includes('primary') || id.includes('secondary')) {
+            if (id.includes('motorway') || id.includes('trunk')) {
+              map.setLayoutProperty(id, 'visibility', 'none')
+            } else if (id.includes('primary') || id.includes('secondary')) {
               if (!id.includes('casing')) map.setPaintProperty(id, 'line-color', PALETTE.roadMajor)
             } else if (id.includes('path') || id.includes('footway') || id.includes('pedestrian')) {
               map.setPaintProperty(id, 'line-color', '#9fd3c7')
-            } else if (!id.includes('casing')) map.setPaintProperty(id, 'line-color', PALETTE.road)
+            } else if (!id.includes('casing')) {
+              map.setPaintProperty(id, 'line-color', PALETTE.road)
+              map.setPaintProperty(id, 'line-width', ['interpolate', ['exponential', 1.4], ['zoom'], 13, 2, 16, 8, 19, 20])
+            }
           }
+        } else if (layer.type === 'symbol' && id.includes('poi')) {
+          map.setLayoutProperty(id, 'visibility', 'none')
         } else if (layer.type === 'symbol' && id.includes('label')) {
           map.setPaintProperty(id, 'text-color', PALETTE.label)
         }
