@@ -27,7 +27,7 @@ const SCHEMA = {
   properties: {
     needs: { type: 'array', items: { type: 'string', enum: [...NEEDS] } },
     detours: { type: 'array', items: { type: 'string', enum: [...DETOURS] } },
-    notes: { type: 'array', items: { type: 'string' }, maxItems: 3 },
+    notes: { type: 'array', items: { type: 'string' } },
   },
 } as const
 
