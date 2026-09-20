@@ -150,10 +150,10 @@ export default function App() {
         { enableHighAccuracy: true },
       )
     } else {
-      // 模擬：每 200ms 前進 6 公尺
+      // 模擬：每 200ms 前進 12 公尺
       let walked = 0
       timer = window.setInterval(() => {
-        walked += 6
+        walked += 12
         const t = Math.min(1, walked / total)
         setProgress(t)
         // 沿線內插
